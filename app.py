@@ -60,7 +60,8 @@ def sidebar():
         st.sidebar.error("Database disconnected")
 
     st.sidebar.caption(f"Target: {NUM_USERS:,} users, {NUM_EVENTS:,} events")
-    st.sidebar.caption(f"DB: {DATABASE_URL.split('@')[-1] if '@' in DATABASE_URL else DATABASE_URL}")
+    db_label = "sqlite:///data/instagram_analytics.db" if DATABASE_URL.startswith("sqlite") else DATABASE_URL.split("@")[-1]
+    st.sidebar.caption(f"DB: {db_label}")
 
     if st.sidebar.button("Initialize / Seed Database", use_container_width=True):
         with st.spinner("Creating tables and seeding data (this may take several minutes)..."):

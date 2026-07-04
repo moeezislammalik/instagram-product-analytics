@@ -27,8 +27,12 @@ def render():
                 try:
                     result = train_churn_model()
                     if "error" not in result:
-                        st.success(f"Model trained! AUC: {result['auc_score']:.3f}")
-                        st.json(result["feature_importance"])
+                        st.success(
+                            f"Model trained successfully — AUC: {result['auc_score']:.3f}, "
+                            f"churn rate: {result['churn_rate']:.1%}"
+                        )
+                        with st.expander("Feature importance details"):
+                            st.json(result["feature_importance"])
                     else:
                         st.error(result["error"])
                 except Exception as exc:
