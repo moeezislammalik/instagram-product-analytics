@@ -1,0 +1,32 @@
+# Environment
+.env
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+
+# Data & models
+data/*.db
+data/*.csv
+data/*.parquet
+models/*.pkl
+models/*.joblib
+
+# Streamlit
+.streamlit/secrets.toml
+
+# IDE
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Local gh binary (optional dev tool)
+gh
