@@ -17,7 +17,9 @@ def get_shap_values(sample_size: int = 500) -> dict:
     """
     model_path = MODELS_DIR / "churn_model.pkl"
     if not model_path.exists():
-        train_churn_model()
+        result = train_churn_model()
+        if "error" in result:
+            return {"error": result["error"]}
 
     with open(model_path, "rb") as f:
         saved = pickle.load(f)

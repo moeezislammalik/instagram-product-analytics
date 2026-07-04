@@ -65,6 +65,12 @@ def safe_divide(numerator: float, denominator: float, default: float = 0.0) -> f
     return numerator / denominator
 
 
+def get_reference_date() -> pd.Timestamp:
+    """Analytics reference date aligned with synthetic dataset end."""
+    from config import DATA_END_DATE
+    return pd.Timestamp(DATA_END_DATE)
+
+
 def generate_date_series(start: str, end: str) -> pd.DatetimeIndex:
     """Generate daily date range."""
     return pd.date_range(start=start, end=end, freq="D")

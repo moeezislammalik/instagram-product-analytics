@@ -6,6 +6,7 @@ from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 
 from database.connection import read_sql
+from utils.helpers import get_reference_date
 from utils.sql_compat import date_filter
 
 
@@ -62,7 +63,7 @@ def get_rfm_segments() -> pd.DataFrame:
         return df
 
     df["last_active"] = pd.to_datetime(df["last_active"])
-    df["recency_days"] = (pd.Timestamp.now() - df["last_active"]).dt.days.fillna(999)
+    df["recency_days"] = (get_reference_date() - df["last_active"]).dt.days.fillna(999)
 
     features = df[["recency_days", "frequency", "active_days"]].fillna(0)
     scaler = StandardScaler()

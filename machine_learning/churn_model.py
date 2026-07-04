@@ -11,6 +11,7 @@ from sklearn.metrics import classification_report, roc_auc_score
 
 from config import MODELS_DIR
 from database.connection import read_sql
+from utils.helpers import get_reference_date
 
 
 def _build_churn_features() -> pd.DataFrame:
@@ -34,12 +35,13 @@ def _build_churn_features() -> pd.DataFrame:
     if df.empty:
         return df
 
+    ref = get_reference_date()
     df["last_active"] = pd.to_datetime(df["last_active"])
     df["created_at"] = pd.to_datetime(df["created_at"])
-    df["recency_days"] = (pd.Timestamp.now() - df["last_active"]).dt.days.fillna(999)
-    df["account_age_days"] = (pd.Timestamp.now() - df["created_at"]).dt.days
+    df["recency_days"] = (ref - df["last_active"]).dt.days.fillna(999)
+    df["account_age_days"] = (ref - df["created_at"]).dt.days
 
-    # Churn label: inactive for 30+ days
+    # Churn label: inactive for 30+ days as of dataset end date
     df["churned"] = (df["recency_days"] > 30).astype(int)
 
     df["engagement_rate"] = df["engagements"] / df["total_events"].clip(lower=1)
@@ -62,8 +64,15 @@ def train_churn_model() -> dict:
     X = df[feature_cols].fillna(0)
     y = df["churned"]
 
+    if y.nunique() < 2:
+        return {
+            "error": "Insufficient class variation for churn model. "
+            "Ensure event data spans multiple activity periods.",
+        }
+
+    stratify = y if y.value_counts().min() >= 2 else None
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42, stratify=y,
+        X, y, test_size=0.2, random_state=42, stratify=stratify,
     )
 
     model = GradientBoostingClassifier(
@@ -73,7 +82,7 @@ def train_churn_model() -> dict:
 
     y_pred = model.predict(X_test)
     y_prob = model.predict_proba(X_test)[:, 1]
-    auc = roc_auc_score(y_test, y_prob)
+    auc = roc_auc_score(y_test, y_prob) if y_test.nunique() > 1 else 0.0
 
     model_path = MODELS_DIR / "churn_model.pkl"
     with open(model_path, "wb") as f:
@@ -93,10 +102,15 @@ def predict_churn_risk() -> pd.DataFrame:
     """Predict churn probability for all users."""
     model_path = MODELS_DIR / "churn_model.pkl"
     if not model_path.exists():
-        train_churn_model()
+        result = train_churn_model()
+        if "error" in result:
+            return pd.DataFrame()
 
-    with open(model_path, "rb") as f:
-        saved = pickle.load(f)
+    try:
+        with open(model_path, "rb") as f:
+            saved = pickle.load(f)
+    except Exception:
+        return pd.DataFrame()
 
     model = saved["model"]
     feature_cols = saved["features"]

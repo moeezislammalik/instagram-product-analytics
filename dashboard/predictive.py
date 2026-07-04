@@ -2,6 +2,7 @@
 
 import streamlit as st
 import plotly.express as px
+import pandas as pd
 
 from machine_learning.churn_model import predict_churn_risk, train_churn_model
 from machine_learning.engagement_model import predict_engagement, train_engagement_model
@@ -23,16 +24,24 @@ def render():
     with tab1:
         if st.button("Train / Retrain Churn Model"):
             with st.spinner("Training churn model..."):
-                result = train_churn_model()
-                if "error" not in result:
-                    st.success(f"Model trained! AUC: {result['auc_score']:.3f}")
-                    st.json(result["feature_importance"])
-                else:
-                    st.error(result["error"])
+                try:
+                    result = train_churn_model()
+                    if "error" not in result:
+                        st.success(f"Model trained! AUC: {result['auc_score']:.3f}")
+                        st.json(result["feature_importance"])
+                    else:
+                        st.error(result["error"])
+                except Exception as exc:
+                    st.error(f"Training failed: {exc}")
 
-        churn = predict_churn_risk()
+        try:
+            churn = predict_churn_risk()
+        except Exception as exc:
+            st.error(f"Could not load churn predictions: {exc}")
+            churn = pd.DataFrame()
+
         if churn.empty:
-            st.warning("No data available.")
+            st.info("Train the churn model using the button above to see predictions.")
         else:
             col1, col2, col3 = st.columns(3)
             risk_counts = churn["risk_level"].value_counts()

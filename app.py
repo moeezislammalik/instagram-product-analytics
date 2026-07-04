@@ -90,21 +90,21 @@ def sidebar():
 def main():
     page = sidebar()
 
-    if page == "executive":
-        from dashboard.executive import render
-        render()
-    elif page == "product":
-        from dashboard.product_analytics import render
-        render()
-    elif page == "experiments":
-        from dashboard.experimentation import render
-        render()
-    elif page == "predictive":
-        from dashboard.predictive import render
-        render()
-    elif page == "ai_analyst":
-        from dashboard.ai_chat import render
-        render()
+    page_modules = {
+        "executive": "dashboard.executive",
+        "product": "dashboard.product_analytics",
+        "experiments": "dashboard.experimentation",
+        "predictive": "dashboard.predictive",
+        "ai_analyst": "dashboard.ai_chat",
+    }
+
+    try:
+        import importlib
+        module = importlib.import_module(page_modules[page])
+        module.render()
+    except Exception as exc:
+        st.error(f"Something went wrong loading this page: {exc}")
+        st.exception(exc)
 
 
 if __name__ == "__main__":

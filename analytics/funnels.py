@@ -3,7 +3,7 @@
 import pandas as pd
 
 from database.connection import read_sql
-from utils.constants import FUNNEL_STEPS
+from config import FUNNEL_STEPS
 from utils.sql_compat import date_filter
 
 
